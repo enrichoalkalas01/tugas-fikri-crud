@@ -1,0 +1,45 @@
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+#main .navbar {
+    color: #fff;
+    background-color: #2e2e2e;
+}
+
+.navbar.mini {
+    border-radius: 10px;
+}
+
+.navbar .content {
+    display: flex;
+    padding: 10px 20px;
+}
+
+.navbar .content ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar .content ul li {
+    margin-left: 20px;
+}
+
+#main {
+    position: relative;
+}
+
+#main .box-content {
+
+}
+
+#main .box-content .content.content-box {
+    padding: 2.5% 10%;
+}
+
+.form-box {
+    padding: 5% 2.5%;
+}
