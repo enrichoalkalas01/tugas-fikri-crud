@@ -1,0 +1,21 @@
+services:
+    tugas-fikri:
+        build: .
+        container_name: tugas-fikri
+        ports:
+            - "8050:80"
+            - "3307:3306" # MySQL port (host:container)
+        volumes:
+            - ./:/var/www/html
+        restart: always
+        deploy:
+            resources:
+                limits:
+                    cpus: "1.0"
+                    memory: 512M
+                reservations:
+                    cpus: "0.25"
+                    memory: 128M
+
+volumes:
+    app:

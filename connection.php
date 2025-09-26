@@ -1,26 +1,18 @@
 <?php
 
-$server = 'localhost';
+$server = '127.0.0.1';  // atau 'localhost'
 $username = 'root';
 $password = '';
 $database = 'tugas_data';
+$port = 3306;
 
-$conn = new mysqli($server, $username, $password, $database);
+$conn = new mysqli($server, $username, $password, $database, $port);
 
-if ( !$conn ) {
-    echo '
-        <script type="text/javascript">
-            console.log("connection php error")
-        </script>
-    ';
-    die();
-} else {
-    echo '
-        <script type="text/javascript">
-            console.log("successfull to connect php database")
-        </script>
-    ';
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
 
+// HAPUS semua echo atau <script> di sini!
+// Jangan ada output apapun!
 
 ?>
