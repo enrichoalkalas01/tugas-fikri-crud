@@ -22,6 +22,12 @@ RUN mkdir -p /var/run/mysqld && \
 COPY setup-mysql.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/setup-mysql.sh
 
+# Copy semua file PHP ke container
+COPY . /var/www/html/
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html
+
 # Expose ports
 EXPOSE 80 3306
 
@@ -29,4 +35,4 @@ EXPOSE 80 3306
 WORKDIR /var/www/html
 
 # Start MySQL dan Apache
-CMD ["/bin/bash", "-c", "/usr/local/bin/setup-mysql.sh && apache2-foreground"]
+CMD ["/usr/local/bin/setup-mysql.sh"]
