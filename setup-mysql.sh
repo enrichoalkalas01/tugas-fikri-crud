@@ -1,59 +1,41 @@
 #!/bin/bash
+set -e
 
-# Initialize MySQL data directory if not exists
+echo "=== Starting Tugas Fikri Container ==="
+
+# Inisialisasi MySQL jika belum
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    echo "Initializing MySQL data directory..."
-    mysql_install_db --user=mysql --datadir=/var/lib/mysql
+    echo "Initializing MySQL..."
+    mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
 fi
 
-# Start MySQL
+# Start MySQL menggunakan service
 echo "Starting MySQL..."
-mysqld_safe --user=mysql --skip-grant-tables &
+service mariadb start
 
-# Wait for MySQL to be ready
-echo "Waiting for MySQL to start..."
-for i in {1..30}; do
-    if mysqladmin ping &>/dev/null; then
-        echo "MySQL is ready!"
-        break
-    fi
-    sleep 1
-done
+# Tunggu MySQL siap
+echo "Waiting for MySQL..."
+sleep 5
 
-# Setup database and permissions
-echo "Setting up database..."
-mysql << EOF
-FLUSH PRIVILEGES;
-ALTER USER 'root'@'localhost' IDENTIFIED BY '';
+# Setup database dan user
+echo "Creating databases..."
+mariadb -u root <<EOF
+CREATE DATABASE IF NOT EXISTS tugas_fikri;
 CREATE DATABASE IF NOT EXISTS tugas_data;
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '' WITH GRANT OPTION;
+CREATE USER IF NOT EXISTS 'fikri'@'%' IDENTIFIED BY 'password123';
+CREATE USER IF NOT EXISTS 'fikri'@'localhost' IDENTIFIED BY 'password123';
+GRANT ALL PRIVILEGES ON tugas_fikri.* to 'fikri'@'%';
+GRANT ALL PRIVILEGES ON tugas_fikri.* TO 'fikri'@'localhost';
+GRANT ALL PRIVILEGES ON tugas_data.* TO 'fikri'@'%';
+GRANT ALL PRIVILEGES ON tugas_data.* TO 'fikri'@'localhost';
 FLUSH PRIVILEGES;
 EOF
 
-# Restart MySQL dengan grant tables
-echo "Restarting MySQL with grant tables..."
-mysqladmin shutdown
-sleep 2
-mysqld_safe --user=mysql &
+echo "✅ Database ready!"
+echo "   - tugas_fikri"
+echo "   - tugas_data"
+echo "   User: fikri / password123"
 
-# Wait again
-for i in {1..30}; do
-    if mysqladmin -u root ping &>/dev/null; then
-        echo "MySQL restarted successfully!"
-        break
-    fi
-    sleep 1
-done
-
-# Import SQL file jika ada
-if [ -f "/var/www/html/tugas_data.sql" ]; then
-    echo "Importing tugas_data.sql..."
-    mysql -u root tugas_data < /var/www/html/tugas_data.sql
-    echo "Import completed!"
-fi
-
-echo "MySQL setup completed successfully!"
-
-# exec untuk pass control ke Apache
+# Start Apache
+echo "Starting Apache..."
 exec apache2-foreground
