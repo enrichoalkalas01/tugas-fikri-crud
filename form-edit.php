@@ -1,12 +1,23 @@
 <?php
     include 'connection.php';
-    $sql = "UPDATE product SET title='". $_POST['title'] ."', excerpt='". $_POST['excerpt'] ."', description='". $_POST['description'] ."' WHERE id=". $_POST['id'];
 
-    if ( $conn->query($sql) ) {
-        header("Location: index.php?text=success to edit data");
-        die();
-    } else {
-        header("Location: edit.php?id=". $_POST['id'] ."text=failed to edit data");
-        die();
+    $id          = (int)($_POST['id']          ?? 0);
+    $title       = trim($_POST['title']        ?? '');
+    $excerpt     = trim($_POST['excerpt']      ?? '');
+    $description = trim($_POST['description']  ?? '');
+
+    if ($id <= 0 || $title === '' || $excerpt === '') {
+        header("Location: index.php?text=Invalid form data");
+        exit;
     }
+
+    $stmt = $conn->prepare("UPDATE product SET title=?, excerpt=?, description=? WHERE id=?");
+    $stmt->bind_param("sssi", $title, $excerpt, $description, $id);
+
+    if ($stmt->execute()) {
+        header("Location: index.php?text=success: product updated");
+    } else {
+        header("Location: edit.php?id=" . $id . "&text=failed: could not update product");
+    }
+    exit;
 ?>

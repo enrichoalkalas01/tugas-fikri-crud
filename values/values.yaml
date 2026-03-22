@@ -1,0 +1,138 @@
+# ==============================================
+# Helm Values - tugas-fikri-crud
+# ==============================================
+
+# App Info
+appName: tugas-fikri-crud
+namespace: portofolio
+
+# Replicas
+replicaCount: 1
+
+# Image Configuration
+image:
+    repository: 192.168.20.21/other/tugas-fikri-crud
+    tag: "latest"
+    pullPolicy: Always
+
+# Image Pull Secrets (private registry)
+imagePullSecrets:
+    - name: harbor-creds
+
+# Name Override
+nameOverride: ""
+fullnameOverride: ""
+
+# Container port (Apache listens on 80)
+containerPort: 80
+
+# Service Configuration
+service:
+    type: NodePort
+    port: 80
+    targetPort: 80
+    nodePort: 30233
+
+# Ingress Configuration
+ingress:
+    enabled: true
+    className: nginx
+    annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: /$2
+        nginx.ingress.kubernetes.io/use-regex: "true"
+    hosts:
+        - host: ""
+          paths:
+              - path: /portofolio/show/tugas-fikri-crud(/|$)(.*)
+                pathType: ImplementationSpecific
+    tls: []
+
+# Health Check / Probes
+probe:
+    enabled: true
+    liveness:
+        path: /health.php
+        port: 80
+        initialDelaySeconds: 15
+        periodSeconds: 20
+        failureThreshold: 3
+    readiness:
+        path: /health.php
+        port: 80
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        failureThreshold: 3
+
+# Resources
+resources:
+    requests:
+        cpu: 50m
+        memory: 128Mi
+    limits:
+        cpu: 100m
+        memory: 256Mi
+
+# Autoscaling (HPA)
+autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# Environment Variables
+env:
+    - name: ENVIRONMENT
+      value: "production"
+    # Database connection — override via Secret in production
+    - name: DB_HOST
+      value: "mysql-service"
+    - name: DB_PORT
+      value: "3306"
+    - name: DB_NAME
+      value: "tugas_data"
+    - name: DB_USER
+      valueFrom:
+          secretKeyRef:
+              name: tugas-fikri-db-secret
+              key: username
+    - name: DB_PASSWORD
+      valueFrom:
+          secretKeyRef:
+              name: tugas-fikri-db-secret
+              key: password
+
+# Environment from ConfigMap/Secret
+envFrom: []
+
+# Volume Mounts
+volumeMounts: []
+
+# Volumes
+volumes: []
+
+# Host Aliases
+hostAliases: []
+
+# Node Selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Pod Security Context
+podSecurityContext: {}
+
+# Container Security Context
+securityContext:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+
+# Service Account
+serviceAccount:
+    create: false
+    name: ""
+    annotations: {}

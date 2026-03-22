@@ -1,28 +1,26 @@
 FROM php:8.2-apache
 
-# Update package list dan install dependencies
-RUN apt-get update && \
-    apt-get install -y \
-    default-mysql-client \
+# Install PHP extensions
+RUN docker-php-ext-install mysqli pdo pdo_mysql \
+    && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install mysqli pdo pdo_mysql
+# Apache config: allow .htaccess overrides
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Copy application files
+COPY --chown=www-data:www-data . /var/www/html/
 
-# Copy semua file PHP ke container
-COPY . /var/www/html/
+# Remove extra Dockerfiles and infra files from the image
+RUN rm -f /var/www/html/Dockerfile* \
+          /var/www/html/compose.yml \
+          /var/www/html/k8s.yml \
+          /var/www/html/setup-mysql*.sh
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html
+# Health check endpoint
+RUN echo '<?php http_response_code(200); echo "ok"; ?>' > /var/www/html/health.php
 
-# Expose port
+WORKDIR /var/www/html
 EXPOSE 80
 
-# Set working directory
-WORKDIR /var/www/html
-
-# Start Apache
 CMD ["apache2-foreground"]

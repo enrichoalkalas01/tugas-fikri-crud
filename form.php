@@ -1,74 +1,50 @@
-<?php include 'headers.php'?>
+<?php include 'headers.php' ?>
 
-<section id="main" class="container-fluid">
-    
-    <?php include 'navbar.php' ?>
+<?php include 'navbar-mini.php' ?>
 
-    <div class="row box-content">
-        <div class="col-md-12 content content-box">
-            <?php include "navbar-mini.php"?>
+<div class="page-container">
 
-            <div class="alert" id="alert" style="padding: 10px 0; margin: 10px 0;">
+    <div class="breadcrumb-s">
+        <a href="index.php">Products</a>
+        <span>&#8250;</span>
+        <span>Add New</span>
+    </div>
 
+    <div class="card-box">
+        <div class="card-head">
+            <h1>Add New Product</h1>
+        </div>
+        <div class="card-body">
+            <div class="form-wrap">
+                <form action="form-create.php" method="POST" id="createForm">
+                    <div class="form-group">
+                        <label for="title" class="form-label-s">Title <span style="color:var(--danger)">*</span></label>
+                        <input name="title" type="text" id="title" class="form-control-s"
+                               placeholder="Product title" required maxlength="255">
+                    </div>
+                    <div class="form-group">
+                        <label for="excerpt" class="form-label-s">Excerpt <span style="color:var(--danger)">*</span></label>
+                        <input name="excerpt" type="text" id="excerpt" class="form-control-s"
+                               placeholder="Short description" required maxlength="255">
+                        <div class="form-hint">A brief summary shown in the product list.</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="description" class="form-label-s">Description</label>
+                        <textarea name="description" id="description" class="form-control-s"
+                                  rows="4" placeholder="Full product description..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary-main">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                            Save Product
+                        </button>
+                        <a href="index.php" class="btn-secondary-main">Cancel</a>
+                    </div>
+                </form>
             </div>
-
-            <div class="row form-box">
-                <div class="col-md-12 text-center">
-                    <h2>Form Input Data</h2>
-                </div>
-                <div class="col-md-12 form-content">
-                    <form action="form-create.php" method="POST">
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input name="title" type="text" class="form-control" id="title" placeholder="...">
-                        </div>
-                        <div class="mb-3">
-                            <label for="excerpt" class="form-label">Excerpt</label>
-                            <input name="excerpt" type="text" class="form-control" id="excerpt" placeholder="...">
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Example textarea</label>
-                            <textarea name="description" class="form-control" id="description" rows="3"></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <button class="btn btn-primary">Submit</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
         </div>
     </div>
-</section>
 
-<script>
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const params = Object.fromEntries(urlSearchParams.entries());
-    console.log(params)
-    if ( !params.text ) {
-        console.log(null)
-    } else {
-        if (params.text.includes('success') == true ) {
-            document.querySelector('#alert').innerHTML = `
-                <div 
-                    class="alert-wrapper" 
-                    style="background-color: green; padding: 10px 25px; border-radius: 5px; color: #fff;"
-                >
-                    <span>${  params.text }</span>
-                </div>
-            `
-        } else {
-            document.querySelector('#alert').innerHTML = `
-                <div 
-                    class="alert-wrapper" 
-                    style="background-color: red; padding: 10px 25px; border-radius: 5px; color: #fff;"
-                >
-                    <span>${  params.text }</span>
-                </div>
-            `
-        }
-    }
-</script>
+</div>
 
-
-<?php include 'footers.php'?>
+<?php include 'footers.php' ?>

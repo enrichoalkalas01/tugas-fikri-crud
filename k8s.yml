@@ -1,115 +1,122 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-    name: tugas-fikri
-    labels:
-        app: tugas-fikri
-spec:
-    replicas: 1
-    selector:
-        matchLabels:
-            app: tugas-fikri
-    template:
-        metadata:
-            labels:
-                app: tugas-fikri
-        spec:
-            nodeSelector:
-                kubernetes.io/hostname: aml-s9xx-box
-            containers:
-                - name: tugas-fikri
-                  image: 192.168.20.21/other/tugas-fikri:arm64
-                  imagePullPolicy: Always
-                  ports:
-                      - containerPort: 80
-                  resources:
-                      requests:
-                          memory: "128Mi"
-                          cpu: "100m"
-                      limits:
-                          memory: "256Mi"
-                          cpu: "200m"
-            # Uncomment jika pakai private registry dengan autentikasi
-            # imagePullSecrets:
-            # - name: registry-secret
+# ==============================================
+# Kubernetes Manifests - tugas-fikri-crud
+# Deploy: kubectl apply -f k8s.yml -n portofolio
+# ==============================================
+
+# --- Secret for DB credentials ---
+# Create manually (do not commit with real values):
+# kubectl create secret generic tugas-fikri-db-secret \
+#   --from-literal=username=root \
+#   --from-literal=password=yourpassword \
+#   -n portofolio
+
 ---
-apiVersion: v1
-kind: Service
-metadata:
-    name: tugas-fikri-service
-spec:
-    type: NodePort
-    selector:
-        app: tugas-fikri
-    ports:
-        - protocol: TCP
-          port: 80
-          targetPort: 80
-          nodePort: 30080
-
-
-
-# =================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tugas-fikri
+  name: tugas-fikri-crud
+  namespace: portofolio
   labels:
-    app: tugas-fikri
+    app: tugas-fikri-crud
+    version: "1.0"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: tugas-fikri
+      app: tugas-fikri-crud
   template:
     metadata:
       labels:
-        app: tugas-fikri
+        app: tugas-fikri-crud
     spec:
-      nodeSelector:
-        kubernetes.io/hostname: aml-s9xx-box
-      containers:
-      - name: tugas-fikri
-        image: 192.168.20.21/other/tugas-fikri:arm64
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 80
-          name: http
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "0.5"
-          limits:
-            memory: "128Mi"
-            cpu: "0.5"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 5
       imagePullSecrets:
-      - name: harbor-secret
+        - name: harbor-creds
+      containers:
+        - name: tugas-fikri-crud
+          image: 192.168.20.21/other/tugas-fikri-crud:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: DB_HOST
+              value: "mysql-service"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_NAME
+              value: "tugas_data"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: tugas-fikri-db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tugas-fikri-db-secret
+                  key: password
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /health.php
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health.php
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: tugas-fikri-service
+  name: tugas-fikri-crud-service
+  namespace: portofolio
   labels:
-    app: tugas-fikri
+    app: tugas-fikri-crud
 spec:
   type: NodePort
   selector:
-    app: tugas-fikri
+    app: tugas-fikri-crud
   ports:
-  - name: http
-    protocol: TCP
-    port: 80
-    targetPort: 80
-    nodePort: 30080
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30233
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tugas-fikri-crud-ingress
+  namespace: portofolio
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /portofolio/show/tugas-fikri-crud(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tugas-fikri-crud-service
+                port:
+                  number: 80

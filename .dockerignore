@@ -1,0 +1,9 @@
+.git
+.github
+.gitignore
+Dockerfile*
+compose.yml
+k8s.yml
+values/
+setup-mysql*.sh
+*.md
